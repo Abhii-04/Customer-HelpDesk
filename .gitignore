@@ -13,5 +13,4 @@ wheels/
 .env
 .env.*
 !.env.example
-CHANGES.md
-SUGGESTIONS.md
+docs/
