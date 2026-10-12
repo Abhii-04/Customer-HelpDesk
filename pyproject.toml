@@ -1,0 +1,12 @@
+[project]
+name = "laya-helpdesk"
+version = "0.1.0"
+description = "Laya-routed customer helpdesk with order lookup and checked DeepSeek replies"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "python-dotenv>=1.0.0",
+    "langchain-openai>=1.7.0",
+    "laya>=0.4.6",
+    "rich>=14.0.0",
+]
