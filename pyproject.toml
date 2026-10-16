@@ -9,4 +9,5 @@ dependencies = [
     "langchain-openai>=1.7.0",
     "laya>=0.4.6",
     "rich>=14.0.0",
+    "fastapi[standard]>=0.143.0",
 ]
