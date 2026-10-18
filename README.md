@@ -116,4 +116,4 @@ agent/nodes/response_checker.py    Laya reply checks and acceptance rules
 
 Orders and catalog entries are in-memory sample data. Delivery dates are fixed demo values; days since delivery are calculated using the date captured when the store module loads, so return eligibility changes over time.
 
-The human route announces a teammate handoff and a reply within two hours, but no handoff integration exists yet. The human-review fallback also does not create a review ticket. There is no persistent conversation memory or live order backend.
+The human route announces a teammate handoff and a reply within two hours, but no handoff integration exists yet. The human-review fallback also does not create a review ticket.
