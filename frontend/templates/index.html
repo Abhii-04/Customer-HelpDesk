@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Laya · Customer support</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}">
+  <script src="{{ url_for('static', path='chat.js') }}" defer></script>
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="/" aria-label="Laya home"><span class="mark">l.</span> laya<span class="brand-caption">HELPDESK</span></a><span class="header-note">A little help goes a long way.</span></header>
+  <main class="workspace">
+    <aside class="intro">
+      <p class="eyebrow">CUSTOMER CARE</p>
+      <h1>Let’s sort<br>it out.</h1>
+      <p class="intro-copy">Orders, products, and everything in between. Tell us what you need a hand with.</p>
+      <div class="topics"><span>01 <b>Track an order</b></span><span>02 <b>Explore our products</b></span><span>03 <b>Returns & exchanges</b></span></div>
+      <p class="aside-note">Have an order question?<br>Keep your order ID handy.</p>
+    </aside>
+    <section class="chat" aria-label="Support chat">
+      <div class="chat-header"><div class="agent-avatar" aria-hidden="true">l.</div><div><h2>Laya assistant</h2><p>Here to help you find an answer</p></div><button id="new-chat" class="quiet-button" type="button">New chat</button></div>
+      <div id="messages" class="messages" role="log" aria-label="Conversation" aria-live="polite" aria-relevant="additions">
+        <article class="message assistant"><span class="sender">LAYA</span><p>Hi there! How can I help today? Share an order ID or ask me about a product or our return policy.</p></article>
+      </div>
+      <div id="suggestions" class="suggestions" aria-label="Try a question"><button type="button" data-message="Where is order KH-1042?">Track order KH-1042 <span>↗</span></button><button type="button" data-message="What size is the terracotta planter?">Product details <span>↗</span></button><button type="button" data-message="What is your return policy?">Return policy <span>↗</span></button></div>
+      <div class="composer-area"><p id="status" class="status" role="status">Each message is a separate request. Include relevant details.</p><p id="error" class="error" role="alert" hidden></p>
+        <form id="chat-form" action="/start-agent" method="post"><label class="sr-only" for="message">Your message</label><textarea id="message" name="user_input" rows="2" maxlength="4000" placeholder="Type your message…" required></textarea><button id="send" type="submit" aria-label="Send message">↑</button></form>
+        <div class="composer-note"><span>Enter to send · Shift + Enter for a new line</span><span id="count">0 / 4000</span></div>
+      </div>
+    </section>
+  </main>
+  <footer>Laya Helpdesk <span>Thoughtful support, one message at a time.</span></footer>
+  <noscript>This chat needs JavaScript enabled to send messages and display replies.</noscript>
+</body>
+</html>

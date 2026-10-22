@@ -117,3 +117,24 @@ agent/nodes/response_checker.py    Laya reply checks and acceptance rules
 Orders and catalog entries are in-memory sample data. Delivery dates are fixed demo values; days since delivery are calculated using the date captured when the store module loads, so return eligibility changes over time.
 
 The human route announces a teammate handoff and a reply within two hours, but no handoff integration exists yet. The human-review fallback also does not create a review ticket.
+
+## Web chat
+
+Run the full application from the project root:
+
+```bash
+uv sync
+uv run uvicorn backend.app:app --reload --host 127.0.0.1 --port 8000
+```
+
+Open <http://127.0.0.1:8000>. FastAPI serves the frontend and receives messages on the same origin; no separate frontend server or Node build is needed. Enter sends a message, Shift+Enter adds a line, and New chat clears the visible conversation. Messages are independent requests; the display is not agent memory and is cleared on refresh.
+
+The browser submits URL-encoded `user_input` to `POST /start-agent`, which returns a JSON `response`. Messages must contain non-whitespace text and at most 4,000 characters. The existing Laya and DeepSeek requirements above still apply; initial Laya inference can take longer while its model loads. No credentials belong in the frontend.
+
+Run the offline integration suite:
+
+```bash
+uv run python -m unittest discover -s tests -v
+```
+
+See [integration report](docs/INTEGRATION_REPORT.md) and [backend changes report](docs/BACKEND_CHANGES_REPORT.md) for verification results and follow-up suggestions.
