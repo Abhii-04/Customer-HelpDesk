@@ -1,11 +1,10 @@
 # Laya Helpdesk
 
-A command-line customer-support demo that uses local Laya inference to classify requests and check replies. Python tools answer order-status questions, while DeepSeek generates answers from a supplied product catalog and return policy.
+A fullstack customer-support demo with a browser chat, a FastAPI backend, and a Laya-powered agent. Python tools answer order-status questions, while DeepSeek generates answers from a supplied product catalog and return policy. FastAPI serves both the frontend and API with one startup command.
 
 ## Requirements
 
 - Python 3.12 or newer and `uv`.
-- A terminal with support for Python's `readline` module (the CLI uses it for input history).
 - Network access for dependency installation and Laya's first model download, plus sufficient memory to run the local model.
 - A DeepSeek API key for product and return-policy questions.
 
@@ -26,13 +25,15 @@ DEEPSEEK_API_KEY=your_api_key_here
 # BIG_LLM=your_return_policy_model
 ```
 
-Then start the interactive terminal:
+Start the web application from the project root:
 
 ```bash
-uv run python main.py
+uv run uvicorn backend.app:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Enter an order ID such as `KH-1042` or a support question at the `You ›` prompt. The terminal displays a welcome panel, a processing spinner, and boxed replies. Laya downloads its model on first inference, so the first request can take longer.
+Open <http://127.0.0.1:8000> and type a message. No separate frontend server or Node build is required. Laya loads its model on first inference, so the first response can take longer. Stop the server with Ctrl+C.
+
+The web entry point is `backend/app.py`. The root `main.py` is an optional terminal interface; it is not used to start the web application.
 
 ## Usage
 
@@ -48,13 +49,24 @@ I want to speak to a person.
 
 A bare order ID is expanded into an order-status question before classification. IDs follow the format `KH-` plus four digits and are matched without regard to case.
 
-Use the Up arrow to recall earlier input. Blank input prompts again; `quit`, `exit`, Ctrl+C, or Ctrl+D closes the session. If a request fails, the interactive terminal displays the error and lets you try another request. Each request is independent; input history does not provide conversation memory.
+Press Enter to send, or Shift+Enter to add a new line. Suggested questions fill the message box. New chat clears the visible conversation. Failed requests restore your message so you can retry.
 
-To process one request and exit, pass the message as an argument:
+Messages must contain non-whitespace text and be at most 4,000 characters long. Each message is an independent agent request: earlier messages are displayed in the browser but are not supplied as conversation memory. Refreshing the page clears the visible history.
+
+## Optional terminal interface
+
+For an interactive CLI instead of the browser:
+
+```bash
+uv run python main.py
+```
+
+The CLI requires Python's `readline` module for input history. Use the Up arrow to recall input; `quit`, `exit`, Ctrl+C, or Ctrl+D closes the session.
+
+To process one request and exit:
 
 ```bash
 uv run python main.py "Where is order KH-1042?"
-uv run python main.py "What size is the terracotta planter?"
 ```
 
 ## Configuration
@@ -80,7 +92,9 @@ Routing and reply-check thresholds live in `agent/config/config.py`:
 
 ## Request flow
 
-`classify` → `decide` → `handle` → `check_reply` → display the response
+Browser → `POST /start-agent` → `classify` → `decide` → `handle` → check generated replies → JSON response → chat bubble
+
+The browser submits form-encoded `user_input`. Successful responses contain a `response` string; `chat_id` and `user_id` currently default to `null` and do not provide sessions. Invalid input returns HTTP 422. Agent failures return HTTP 500 with a generic customer-facing message; details are logged on the server.
 
 Laya classifies intent, complexity, and whether the customer wants a person. Route selection applies these rules in order:
 
@@ -95,12 +109,18 @@ Laya classifies intent, complexity, and whether the customer wants a person. Rou
 
 Complexity is collected but does not independently select a route. Delivery-day calculations stay in Python, and the return window is seven days.
 
-Laya checks replies for unsupported promises, invented facts, and whether they answer the request. The current CLI checks every reply and checks generated replies a second time. Only the product and return-policy routes use the verdict to withhold a reply; tool, clarification, and human replies are displayed after the check completes. A rejected generated reply displays `Reply needs human review.`
+The web backend checks product and return-policy replies for unsupported promises, invented facts, and whether they answer the request. Rejected generated replies display `Reply needs human review.` Tool, clarification, and human replies are returned directly. The optional CLI checks every reply and checks generated replies a second time; only generated replies use the verdict to withhold a response.
 
 ## Project structure
 
 ```text
-main.py                            Interactive and one-shot CLI
+backend/app.py                     Web entry point, frontend serving, agent endpoint
+backend/model.py                   API response model
+frontend/templates/index.html      Chat page
+frontend/static/chat.js            Chat interactions and API requests
+frontend/static/styles.css         Responsive styling
+tests/test_integration.py          Offline API integration tests
+main.py                            Optional interactive and one-shot CLI
 agent/config/config.py             Model settings, thresholds, shared Laya router
 agent/config/signals.py            Signals, Route, and Verdict dataclasses
 agent/config/catalog_and_policy.py Product catalog and return-policy text
@@ -118,18 +138,7 @@ Orders and catalog entries are in-memory sample data. Delivery dates are fixed d
 
 The human route announces a teammate handoff and a reply within two hours, but no handoff integration exists yet. The human-review fallback also does not create a review ticket.
 
-## Web chat
-
-Run the full application from the project root:
-
-```bash
-uv sync
-uv run uvicorn backend.app:app --reload --host 127.0.0.1 --port 8000
-```
-
-Open <http://127.0.0.1:8000>. FastAPI serves the frontend and receives messages on the same origin; no separate frontend server or Node build is needed. Enter sends a message, Shift+Enter adds a line, and New chat clears the visible conversation. Messages are independent requests; the display is not agent memory and is cleared on refresh.
-
-The browser submits URL-encoded `user_input` to `POST /start-agent`, which returns a JSON `response`. Messages must contain non-whitespace text and at most 4,000 characters. The existing Laya and DeepSeek requirements above still apply; initial Laya inference can take longer while its model loads. No credentials belong in the frontend.
+## Tests and reports
 
 Run the offline integration suite:
 
@@ -137,4 +146,6 @@ Run the offline integration suite:
 uv run python -m unittest discover -s tests -v
 ```
 
-See [integration report](docs/INTEGRATION_REPORT.md) and [backend changes report](docs/BACKEND_CHANGES_REPORT.md) for verification results and follow-up suggestions.
+The suite covers frontend asset serving, order handling, input validation, generated-reply checks, and error responses. Inference is mocked for repeatability; it does not verify live Laya or DeepSeek availability.
+
+See the [integration report](docs/INTEGRATION_REPORT.md) and [backend changes report](docs/BACKEND_CHANGES_REPORT.md) for verification results and follow-up suggestions.
